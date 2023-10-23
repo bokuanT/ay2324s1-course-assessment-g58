@@ -67,3 +67,12 @@ length of array: not null when return type is an array, lengthOfArray[n] = lengt
 assumptions in c code:
 argument format for an array will be (array, len of first dim, len of next dim, ...len of last dim, arg 2..., arg n)
 arrays types are always in the format eg. int*, int**
+
+# Kafka
+1. Follow the instructions here: https://www.geeksforgeeks.org/how-to-install-and-run-apache-kafka-on-windows/
+1. Run this `.\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092` or `bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+` (mac)
+1. Testing: go to compiler-service/kafka-test and run `node producer.js` and then `node consumer.js`. There should be the following:
+```
+{ value: 'Hello Kafka!' }
+```
