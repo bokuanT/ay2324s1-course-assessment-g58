@@ -9,6 +9,7 @@ x-logging:
 
 services:
     frontend:
+        restart: always
         depends_on:
             - gateway
         container_name: frontend
@@ -18,8 +19,6 @@ services:
         env_file:
             - ./frontend/.env
         environment: # Running locally has different url than running on docker (not localhost)
-            - NEXT_PUBLIC_MATCHING_SERVER_URL=http://matching:3004
-            - NEXT_PUBLIC_COLLAB_SERVER_URL=http://collaboration:3005
             - GATEWAY_SERVER_URL=http://gateway:8080
 
     nginx-web-app:
@@ -31,6 +30,8 @@ services:
             - ./certbot/conf/:/etc/nginx/ssl/:ro
         environment: 
             - WEB_APP_ADDR=frontend:3000
+            - MATCH_SERVICE_ADDR=matching:3004
+            - COLLAB_SERVICE_ADDR=collaboration:3005
         ports:
             - "80:80"
             - "443:443"
@@ -50,6 +51,7 @@ services:
             - ./certbot/conf/:/etc/letsencrypt/:rw
 
     gateway:
+        restart: always
         depends_on:
             - users
             - questions
@@ -67,6 +69,7 @@ services:
             - QUESTION_SERVICE_URL=http://questions:3002
             - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
     users:
+        restart: always
         depends_on:
             - email
         container_name: user-service
@@ -79,6 +82,7 @@ services:
             - EMAIL_SERVICE_URL=http://email:3007/email
 
     questions:
+        restart: always
         container_name: question-service
         image: bokuan/peerprep-question-service:latest
         ports:
@@ -87,6 +91,7 @@ services:
             - ./backend/mongodb-database/.env
 
     matching:
+        restart: always
         container_name: matching-service
         image: bokuan/peerprep-matching-service:latest
         ports:
@@ -98,12 +103,14 @@ services:
             - USER_SERVICE_URL=http://users:3001/api/session
 
     collaboration:
+        restart: always
         container_name: collaboration-service
         image: bokuan/peerprep-collaboration-service:latest
         ports:
             - "3005:3005"
 
     compiler:
+        restart: always
         depends_on:
             - server
             - workers
@@ -119,6 +126,7 @@ services:
             - JUDGE0_URL=http://server:2358/
     
     email:
+        restart: always
         container_name: email-service
         image: bokuan/peerprep-email-service:latest
         ports:
@@ -127,6 +135,7 @@ services:
             - ./backend/email-service/.env
 
     ai:
+        restart: always
         container_name: ai-service
         depends_on:
             - rabbitmq
@@ -178,6 +187,7 @@ services:
         restart: always
 
     rabbitmq:
+        restart: always
         image: rabbitmq:management
         hostname: rabbitmq
         ports:

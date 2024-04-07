@@ -179,6 +179,7 @@ const CollabPage = () => {
         if (roomId === "") return;
         //TODO: non hardcode url handling
         const socket = io(process.env.NEXT_PUBLIC_COLLAB_SERVER_URL as string, {
+            path: "/ws-collab/",
             auth: {
                 roomId: roomId,
             },

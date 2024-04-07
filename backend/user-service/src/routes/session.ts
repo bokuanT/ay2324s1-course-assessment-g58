@@ -63,7 +63,7 @@ router.post("/", async (req: Request, res: Response) => {
             },
         },
     });
-    res.status(200).json(
+    res.status(201).json(
         `Session created for ${session.users[0].username}, ${session.users[1].username}`
     );
 });

@@ -1,5 +1,22 @@
 # Pushing to docker hub
 
+** Reflect changes in env / source code in production by pushing to docker hub
+
+Ensure FE env variable for matching & collab is routed to nginx ws endpoint
+
+** Judge 0 error on ubuntu: https://github.com/judge0/judge0/issues/325
+
+> You need to fallback to groups v1, here is how I did it on Ubuntu 22:
+
+```
+sudo nano /etc/default/grub
+#edit this line, and save:
+GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"
+sudo update-grub
+sudo reboot
+```
+> Cheers
+
 ## FE
 
 From root dir:

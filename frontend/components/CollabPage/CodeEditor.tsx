@@ -82,6 +82,7 @@ const CodeEditor = ({ language, editorContent, roomId, question }: Props) => {
         if (roomId === "") return;
 
         const socket = io(process.env.NEXT_PUBLIC_COLLAB_SERVER_URL as string, {
+            path: "/ws-collab/",
             auth: {
                 roomId: roomId,
             },
