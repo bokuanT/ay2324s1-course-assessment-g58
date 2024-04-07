@@ -48,7 +48,10 @@ export const MatchingProvider = ({ children }: { children: ReactNode }) => {
     ) => {
         // Connect to the server
         const socket = io(
-            process.env.NEXT_PUBLIC_MATCHING_SERVER_URL as string
+            process.env.NEXT_PUBLIC_MATCHING_SERVER_URL as string,
+            {
+                path: "/ws-matching/"
+            }
         );
         console.log("start matching to: ", process.env.NEXT_PUBLIC_MATCHING_SERVER_URL as string)
         setSocket(socket);

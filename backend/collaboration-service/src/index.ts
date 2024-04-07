@@ -11,8 +11,9 @@ const httpServer = http.createServer(app);
 
 // Protect our server by only allowing connections from our frontend
 const io = new Server(httpServer, {
+    path: "/ws-collab/",
     cors: {
-        origin: ["http://localhost:3000", "https://peerprep.ryanchuahj.com"],
+        origin: "*", //TODO make more secure by setting to FE domain name
         methods: ["GET", "POST"],
     },
 });
