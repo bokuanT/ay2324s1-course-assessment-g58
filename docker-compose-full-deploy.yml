@@ -1,0 +1,201 @@
+version: '3.8'
+
+x-logging:
+  &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+
+services:
+    frontend:
+        depends_on:
+            - gateway
+        container_name: frontend
+        image: bokuan/peerprep-frontend:latest
+        ports:
+            - "3000:3000"
+        env_file:
+            - ./frontend/.env
+        environment: # Running locally has different url than running on docker (not localhost)
+            - NEXT_PUBLIC_MATCHING_SERVER_URL=http://matching:3004
+            - NEXT_PUBLIC_COLLAB_SERVER_URL=http://collaboration:3005
+            - GATEWAY_SERVER_URL=http://gateway:8080
+
+    nginx-web-app:
+        build: ./nginx
+        restart: always
+        volumes:
+            - ./nginx/default.conf:/tmp/default.conf/:ro
+            - ./certbot/www:/var/www/certbot/:ro
+            - ./certbot/conf/:/etc/nginx/ssl/:ro
+        environment: 
+            - WEB_APP_ADDR=frontend:3000
+        ports:
+            - "80:80"
+            - "443:443"
+        depends_on:
+            - frontend
+        healthcheck:
+            test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
+            interval: 1000s
+            timeout: 10s
+            retries: 3
+        command: /app/start.sh
+
+    certbot:
+        image: certbot/certbot:latest
+        volumes:
+            - ./certbot/www:/var/www/certbot/:rw
+            - ./certbot/conf/:/etc/letsencrypt/:rw
+
+    gateway:
+        depends_on:
+            - users
+            - questions
+            - matching
+            - collaboration
+            - compiler
+            - ai
+            - email
+        container_name: gateway
+        image: bokuan/peerprep-gateway:latest
+        ports:
+            - "8080:8080"
+        environment:
+            - USER_SERVICE_URL=http://users:3001
+            - QUESTION_SERVICE_URL=http://questions:3002
+            - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+    users:
+        depends_on:
+            - email
+        container_name: user-service
+        image: bokuan/peerprep-user-service:latest
+        ports:
+            - "3001:3001"
+        env_file:
+            - ./backend/user-service/.env
+        environment:
+            - EMAIL_SERVICE_URL=http://email:3007/email
+
+    questions:
+        container_name: question-service
+        image: bokuan/peerprep-question-service:latest
+        ports:
+            - "3002:3002"
+        env_file:
+            - ./backend/mongodb-database/.env
+
+    matching:
+        container_name: matching-service
+        image: bokuan/peerprep-matching-service:latest
+        ports:
+            - "3004:3004"
+        env_file:
+            - ./backend/matching-service/.env
+        environment:
+            - GATEWAY_SERVER_URL=http://gateway:8080
+            - USER_SERVICE_URL=http://users:3001/api/session
+
+    collaboration:
+        container_name: collaboration-service
+        image: bokuan/peerprep-collaboration-service:latest
+        ports:
+            - "3005:3005"
+
+    compiler:
+        depends_on:
+            - server
+            - workers
+            - db
+            - redis
+            - rabbitmq
+        container_name: compiler-service
+        image: bokuan/peerprep-compiler-service:latest
+        ports:
+            - "3006:3006"
+        environment: # Running locally has different url than running on docker (not localhost)
+            - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+            - JUDGE0_URL=http://server:2358/
+    
+    email:
+        container_name: email-service
+        image: bokuan/peerprep-email-service:latest
+        ports:
+            - "3007:3007"
+        env_file:
+            - ./backend/email-service/.env
+
+    ai:
+        container_name: ai-service
+        depends_on:
+            - rabbitmq
+        image: bokuan/peerprep-ai-service:latest
+        ports:
+            - "3008:3008"
+        env_file:
+            - ./backend/ai-service/.env
+        environment: # Running locally has different url than running on docker (not localhost)
+            - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+
+    server: # Judge0
+        image: judge0/judge0:1.13.0
+        volumes:
+            - ./backend/judge0/judge0.conf:/judge0.conf:ro
+        ports:
+            - "2358:2358"
+        privileged: true
+        <<: *default-logging
+        restart: always
+
+    workers: # Judge0
+        image: judge0/judge0:1.13.0
+        command: ["./scripts/workers"]
+        volumes:
+            - ./backend/judge0/judge0.conf:/judge0.conf:ro
+        privileged: true
+        <<: *default-logging
+        restart: always
+
+    db: # Judge0
+        image: postgres:13.0
+        env_file: ./backend/judge0/judge0.conf
+        volumes:
+            - postgres-data:/var/lib/postgresql/data/
+        <<: *default-logging
+        restart: always
+
+    redis: # Judge0
+        image: redis:6.0
+        command: [
+            "bash", "-c",
+            'docker-entrypoint.sh --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+        ]
+        env_file: ./backend/judge0/judge0.conf
+        volumes:
+            - redis-data:/data
+        <<: *default-logging
+        restart: always
+
+    rabbitmq:
+        image: rabbitmq:management
+        hostname: rabbitmq
+        ports:
+            - "5672:5672"      # AMQP protocol
+            - "15672:15672"    # Management UI
+        expose:
+            - 5672
+            - 15672
+        environment:
+            RABBITMQ_DEFAULT_USER: user
+            RABBITMQ_DEFAULT_PASS: password
+        volumes:
+            - rabbitmq_data:/var/lib/rabbitmq
+            - rabbitmq_log:/var/log/rabbitmq
+
+volumes:
+    postgres-data:
+    redis-data:
+    rabbitmq_data:
+    rabbitmq_log:
+    
