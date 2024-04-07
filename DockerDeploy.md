@@ -1,5 +1,9 @@
 # Pushing to docker hub
 
+** Reflect changes in env / source code in production by pushing to docker hub
+
+Ensure FE env variable for matching & collab is routed to nginx ws endpoint
+
 ## FE
 
 From root dir:

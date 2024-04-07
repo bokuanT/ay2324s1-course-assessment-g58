@@ -10,7 +10,7 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
     // Allow connections from localhost:3000
     cors: {
-        origin: ["http://localhost:3000", "https://peerprep.ryanchuahj.com"],
+        origin: "*", //TODO make more secure by setting to FE domain name
         methods: ["GET", "POST"],
     },
 });

@@ -50,6 +50,7 @@ export const MatchingProvider = ({ children }: { children: ReactNode }) => {
         const socket = io(
             process.env.NEXT_PUBLIC_MATCHING_SERVER_URL as string
         );
+        console.log("start matching to: ", process.env.NEXT_PUBLIC_MATCHING_SERVER_URL as string)
         setSocket(socket);
 
         // Handle successful connection

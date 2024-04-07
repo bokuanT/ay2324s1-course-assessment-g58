@@ -18,8 +18,6 @@ services:
         env_file:
             - ./frontend/.env
         environment: # Running locally has different url than running on docker (not localhost)
-            - NEXT_PUBLIC_MATCHING_SERVER_URL=http://matching:3004
-            - NEXT_PUBLIC_COLLAB_SERVER_URL=http://collaboration:3005
             - GATEWAY_SERVER_URL=http://gateway:8080
 
     nginx-web-app:
@@ -31,6 +29,7 @@ services:
             - ./certbot/conf/:/etc/nginx/ssl/:ro
         environment: 
             - WEB_APP_ADDR=frontend:3000
+            - MATCH_SERVICE_ADDR=matching:3004
         ports:
             - "80:80"
             - "443:443"
