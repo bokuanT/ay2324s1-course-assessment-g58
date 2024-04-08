@@ -38,7 +38,14 @@ declare global {
     if (socketId) {
       console.log(socketId);
     }
-    const peer = socketId ? new Peer(socketId) : new Peer();
+    const peer = socketId ? new Peer(socketId,
+      {
+        host: process.env.NEXT_PUBLIC_DOMAIN_NAME,
+        path: '/peer-js',
+        secure: true,
+        port: 443
+      }
+    ) : new Peer();
 
     let cleanup = () => {};
     if (socketId !== username1) {
