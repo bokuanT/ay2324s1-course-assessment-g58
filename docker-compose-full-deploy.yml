@@ -32,11 +32,13 @@ services:
             - WEB_APP_ADDR=frontend:3000
             - MATCH_SERVICE_ADDR=matching:3004
             - COLLAB_SERVICE_ADDR=collaboration:3005
+            - PEER_JS_ADDR=peer-js:9000
         ports:
             - "80:80"
             - "443:443"
         depends_on:
             - frontend
+            - peer-js
         healthcheck:
             test: ["CMD-SHELL", "curl --silent --fail localhost:80/health-check || exit 1"]
             interval: 1000s
@@ -49,6 +51,10 @@ services:
         volumes:
             - ./certbot/www:/var/www/certbot/:rw
             - ./certbot/conf/:/etc/letsencrypt/:rw
+
+    peer-js:
+        image: peerjs/peerjs-server
+        command: ["peerjs", "--port", "9000", "--path", "/peer-js", "--proxied", "true"]
 
     gateway:
         restart: always
